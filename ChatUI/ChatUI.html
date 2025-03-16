@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body,
+        html {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chat-box {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: white;
+        }
+
+        .message {
+            padding: 10px;
+            margin: 5px;
+            background: lightgray;
+            border-radius: 5px;
+        }
+
+        #input-container {
+            display: flex;
+            background: #1a3a5a;
+            padding: 10px;
+        }
+
+        #message-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: none;
+            outline: none;
+        }
+
+        #send-button {
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            background: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chat-container">
+        <h2 style="text-align: center; padding: 10px; background: black; color: white;">Chat App</h2>
+        <div id="chat-box"></div>
+        <div id="input-container">
+            <input type="text" id="message-input" placeholder="Type a message...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+    <script src="./ChatUI.js"></script>
+</body>
+
+</html>
