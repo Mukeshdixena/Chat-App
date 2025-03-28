@@ -1,3 +1,4 @@
+
 const chatBox = document.getElementById('chat-box');
 const messageInput = document.getElementById('message-input');
 const sendButton = document.getElementById('send-button');
@@ -25,20 +26,59 @@ async function addMessage(userId, messageText, createdAt) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+let lastMsgId = 0;
+
+let currentGourpId;
+
 async function loadMessages() {
     chatBox.innerHTML = '';
-    const token = localStorage.getItem('token');
-    try {
-        console.log("Fetching messages:");
-        const response = await axios.get(`${CONFIG.API_BASE_URL}/api/getMessages`, {
-            headers: { "Authorization": token }
-        });
-        console.log("Messages fetched:", response.data);
 
-        response.data.forEach((messageData) => {
-            const { UserId, messageText, createdAt } = messageData;
-            addMessage(UserId, messageText, createdAt);
-        });
+    const token = localStorage.getItem('token');
+
+    try {
+        const response = await axios.get(`${CONFIG.API_BASE_URL}/api/getMessages`,
+            {
+                params: { ChatGroupId: currentGourpId },
+                headers: { "Authorization": token }
+            });
+
+        const messages = response.data;
+        if (messages.length > 0) {
+            messages.forEach((messageData) => {
+                const { UserId, messageText, createdAt, id } = messageData;
+                addMessage(UserId, messageText, createdAt);
+
+                if (id > lastMsgId) {
+                    lastMsgId = id;
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Error fetching messages:", error);
+    }
+}
+async function loadNewMessages() {
+
+    const token = localStorage.getItem('token');
+
+    try {
+        const response = await axios.get(`${CONFIG.API_BASE_URL}/api/getNewMessages`,
+            {
+                params: { ChatGroupId: currentGourpId, lastMsgId: lastMsgId },
+                headers: { "Authorization": token }
+            });
+
+        const messages = response.data;
+        if (messages.length > 0) {
+            messages.forEach((messageData) => {
+                const { UserId, messageText, createdAt, id } = messageData;
+                addMessage(UserId, messageText, createdAt);
+
+                if (id > lastMsgId) {
+                    lastMsgId = id;
+                }
+            });
+        }
     } catch (error) {
         console.error("Error fetching messages:", error);
     }
@@ -54,7 +94,7 @@ sendButton.addEventListener('click', async () => {
         try {
             console.log("Sending message:");
             const response = await axios.post(`${CONFIG.API_BASE_URL}/api/postMessage`,
-                { messageText: text },
+                { messageText: text, ChatGroupId: currentGourpId },
                 { headers: { "Authorization": token } }
             );
             console.log("Message sent:", response.data);
@@ -68,8 +108,75 @@ messageInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendButton.click();
 });
 
-// Load messages when the page is loaded and then call loadMessages every second
+
 window.addEventListener('load', () => {
-    loadMessages(); // Initial load
-    setInterval(loadMessages, 1000); // Fetch messages every 1 second
+    setInterval(loadNewMessages, 1000);
 });
+
+
+
+const createGroupButton = document.getElementById('create-group-button');
+const createGroupForm = document.getElementById('create-group-form');
+const groupNameInput = document.getElementById('group-name');
+const submitGroupButton = document.getElementById('submit-group-button');
+const groupList = document.getElementById('group-list');
+
+createGroupButton.addEventListener('click', function () {
+    createGroupForm.style.display = 'block';
+});
+
+submitGroupButton.addEventListener('click', async function (event) {
+    event.preventDefault();  // Prevent default form submission behavior
+
+    const groupName = groupNameInput.value.trim();  // Get group name from input
+
+    if (groupName !== '') {
+
+
+        const response = await axios.post(`${CONFIG.API_BASE_URL}/api/postGroup`,
+            { name: groupName },
+        );
+
+        console.log(response);
+        addGroupToList(response.data)
+        // Clear the input field and hide the form
+        groupNameInput.value = '';
+        createGroupForm.style.display = 'none';
+    } else {
+        alert('Please enter a group name.');
+    }
+});
+
+(async () => {
+    const response = await axios.get(`${CONFIG.API_BASE_URL}/api/getGroup`);
+    console.log(response.data);
+
+    response.data.forEach(group => {
+        console.log(group.name);
+        addGroupToList(group)
+    })
+
+})();
+
+
+
+function addGroupToList(group) {
+    const groupList = document.getElementById('group-list');
+    const newGroupItem = document.createElement('li');
+    newGroupItem.textContent = group.id + " " + group.name;
+
+    // Pass a function reference or use an anonymous function to call groupEnter when clicked
+    newGroupItem.addEventListener('click', function () {
+        groupClickHandler(group);
+    });
+
+    groupList.appendChild(newGroupItem);
+}
+
+function groupClickHandler(group) {
+    console.log('Group ID:', group.id);
+    console.log('Group Name:', group.name);
+    loadMessages(group.id);
+    currentGourpId = group.id;
+    lastMsgId = 0;
+}

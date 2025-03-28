@@ -12,13 +12,15 @@ document.getElementById('signupForm').addEventListener('submit', async function 
 
     try {
         const response = await axios.post(`${CONFIG.API_BASE_URL}/api/postUser`, userData);
-
+        console.log(response)
         if (response.status === 201) {
-            // Redirect to the sign-in page on success
             window.location.href = "../index.html"; // Adjust this URL based on your sign-in page path
+        } else {
+            alert(response.message);
         }
     } catch (error) {
-        console.error('Error submitting the form:', error);
+        console.log('Error submitting the form:', error);
         // Handle error, e.g., show a message to the user
+        alert(error?.response?.data?.message)
     }
 });
